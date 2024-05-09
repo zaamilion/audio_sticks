@@ -10,5 +10,8 @@ delete_voice_text = 'Напишите название стикера котор
 cancel_operation = 'Операция отменена'
 no_founded_voice_to_delete = 'Не найдено ни одного стикера для удаления'
 delete_voice_confirmed = 'Стикер успешно удален!'
+bot_working_only_in_inline = 'Бот работает только в инлайн-режиме'
 def confirm_delete(name):
     return f'Найден стикер: {name} \n\nНапишите ДА чтобы удалить стикер\nДля отмены ответьте что-либо другое'
+def cabinet(tarif):
+    return f'Ваш тариф в боте: {tarif.name}\nМаксимальное кол-во стикеров: {tarif.quantity}\nДля улучшения тарифа воспользуйтесь ботом: @voice_sticks_bot'
