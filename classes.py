@@ -4,5 +4,5 @@ class get_voice(StatesGroup):
     audio = State()
 
 class delete_voice(StatesGroup):
-    name = State()
-    yes_or_no = State()
+    id = State()
+    confirm = State()

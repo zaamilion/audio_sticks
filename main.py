@@ -12,7 +12,6 @@ import markups
 import functions
 import classes
 import blanks
-stoping = False
 
 dp = Dispatcher()
 rt = Router()
@@ -20,11 +19,12 @@ dp.include_router(rt)
 bot = Bot(token=tokens.TOKEN)
 
 voice_ids = db.Database('voices')
-voice_ids.list = {}
+voice_ids.load()
 users = db.Database('users')
+users.load()
 requests = 0
 last_message = {}
-
+print('Hello')
 @rt.message(CommandStart())
 async def start(message: types.Message):
     global requests
@@ -77,7 +77,7 @@ async def cquery(call: types.callback_query, state: FSMContext):
             await state.set_state(classes.get_voice.audio)
         elif call.data == 'delete_voice':
             last_message[call.from_user.id] = await bot.send_message(call.from_user.id,blanks.delete_voice_text)
-            await state.set_state(classes.delete_voice.name)
+            await state.set_state(classes.delete_voice.id)
 
     else:
         await bot.send_message(call.from_user.id, blanks.subscribe_message, reply_markup=markup_subscribe)
@@ -106,15 +106,34 @@ async def audio_review(message: types.Message, state: FSMContext):
         await message.answer(blanks.succesfully_adding_voice)
         await message.answer('Админ-панель войспака:', reply_markup=markups.admin_panel)
 
-@rt.message(classes.delete_voice.name)
+@rt.message(classes.delete_voice.id)
 async def delete_audio_step1(message: types.Message, state: FSMContext):
     await functions.delete_old_message(message.from_user.id, last_message)
     res_ids = {}
     for name, id in voice_ids.list.items():
-        res_ids[name] = tuple([len(set(query.query.lower().split()) & set(name.split())), id])
-    searched = [(i) for i in tuple(sorted(res_ids.items(), key=lambda x: x[1][0], reverse=True)[0])][:1]
-    # остановился тут
-    await state.set_state(classes.delete_voice.yes_or_no)
+        res_ids[name] = tuple([len(set(message.text.lower().split()) & set(name.split())), id])
+    searched = [(i) for i in tuple(sorted(res_ids.items(), key=lambda x: x[1][0], reverse=True))]
+    if len(searched) != 0:
+        last_message[message.from_user.id] = await message.answer(blanks.confirm_delete(searched[0][0]))
+        await state.update_data(id=searched[0][0])
+        await state.set_state(classes.delete_voice.confirm)
+    else:
+        last_message[message.from_user.id] = await message.answer(blanks.no_founded_voice_to_delete)
+        await message.answer('Админ-панель войспака:', reply_markup=markups.admin_panel)
+        await state.clear()
+
+@rt.message(classes.delete_voice.confirm)
+async def confirming(message: types.Message, state: FSMContext):
+    await functions.delete_old_message(message.from_user.id, last_message)
+    if message.text.lower() == 'да':
+        data = await state.get_data()
+        del voice_ids.list[data['id']]
+        voice_ids.dump()
+        last_message[message.from_user.id] = await message.answer(blanks.delete_voice_confirmed)
+        await message.answer('Админ-панель войспака:', reply_markup=markups.admin_panel)
+    else:
+        last_message[message.from_user.id] = await message.answer(blanks.cancel_operation)
+    await state.clear()
 
 @rt.inline_query()
 async def inline(query: types.InlineQuery):
@@ -133,5 +152,7 @@ async def inline(query: types.InlineQuery):
         await query.answer([types.InlineQueryResultArticle(id="0", title='ПОДПИШИСЬ НА КАНАЛ', input_message_content=types.InputTextMessageContent(message_text='Чтобы пользоваться ботом подпишись на канал:\n\n@voicemessage_studio'))])
 
 async def running():
+    print('Run')
     await dp.start_polling(bot)
+    print('Run')
 run(running())
