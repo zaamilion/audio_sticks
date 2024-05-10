@@ -1,5 +1,6 @@
 import sys
-print(sys.path)
+'''
+Остановился здесь. Проблема в том что бот которого создает main_bot ищет файлы в директории main_bot а не в 11432197680'''
 from asyncio import run
 import asyncio
 from aiogram import Bot, Dispatcher, types, Router
