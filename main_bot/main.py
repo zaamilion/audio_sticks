@@ -36,6 +36,7 @@ users.load()
 async def creating_bot0(message: types.Message, state: FSMContext):
     await functions.delete_old_message(message.from_user.id, last_message)
     functions.add_to_db(message.from_user.id, users)
+    users.dump()
     last_message[message.from_user.id] = await message.answer(blanks.choose_tarif_for_new_bot, reply_markup=markups.generate_tariffs_markup(users.list[message.from_user.id][0].bot_tarifs))
     await state.set_state(fsm.creating_bot.tarif)
 
@@ -43,15 +44,15 @@ async def creating_bot0(message: types.Message, state: FSMContext):
 async def creating_bot1(call: types.callback_query, state: FSMContext):
     await state.clear()
     await functions.delete_old_message(call.from_user.id, last_message)
-    tarif = functions.get_tariff(call, users)
-    await state.update_data(tariff=tarif)
-    users.list[call.from_user.id][0].bot_tarifs[tarif] -= 1
-    if users.list[call.from_user.id][0].bot_tarifs[tarif] == 0:
+    tarif = functions.get_tarif_idx(call, users)
+    await state.update_data(tariff=users.list[call.from_user.id][0].bot_tarifs[tarif][0])
+    users.list[call.from_user.id][0].bot_tarifs[tarif][1] -= 1
+    if users.list[call.from_user.id][0].bot_tarifs[tarif][1] == 0:
         del users.list[call.from_user.id][0].bot_tarifs[tarif]
     last_message[call.from_user.id] = await bot.send_message(call.from_user.id, blanks.create_bot, reply_markup=markups.generate_tariffs_markup(users.list[call.from_user.id][0].bot_tarifs))
     await state.set_state(fsm.creating_bot.token)
 
-@rt.message(fsm.creating_bot.token)
+@rt.message(fsm.creating_bot.token) # need to write to db q
 async def creating_bot2(message: types.Message, state: FSMContext):
     global tokenz
     await functions.delete_old_message(message.from_user.id, last_message)
@@ -74,8 +75,10 @@ async def creating_bot2(message: types.Message, state: FSMContext):
         json.dump(dict_tokens, file)
 
     await asyncio.create_subprocess_shell(f'cd {new_path}&&python3 main.py')
+    users.list[message.from_user.id][1].append(name)
     await functions.delete_old_message(message.from_user.id, last_message)
     last_message[message.from_user.id] = await message.answer('Succesfull')
+
 
 async def running():
     await dp.start_polling(bot)
