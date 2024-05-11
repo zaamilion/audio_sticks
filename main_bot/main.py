@@ -2,6 +2,7 @@ import asyncio
 from aiogram import Bot, Dispatcher, types, Router, F
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
+import importlib
 import shutil
 import os
 import sys
@@ -13,6 +14,7 @@ import fsm
 import blanks
 
 BASE_PATH = '/workspaces/audio_sticks'
+SELF_PATH = '/workspaces/audio_sticks/main_bot'
 BASE_BOT_PATH = '/workspaces/audio_sticks/default_bot'
 
 last_message = {}
@@ -50,18 +52,19 @@ async def creating_bot2(message: types.Message, state: FSMContext):
     bot_tarif = list(bot_tarif.values())[0]
     owner = message.from_user.id 
     token = message.text
-    new_path = BASE_PATH + f'/{owner}{len(users.list[owner][1])}'
+    name = f'{owner}{len(users.list[owner][1])}'
+    new_path = BASE_PATH + f'/{name}'
     shutil.copytree(BASE_BOT_PATH, new_path)
-    sys.path.insert(0, new_path)
-    import tokens
+
+    sys.path.append(new_path)
+    new_module = importlib.import_module(name)
+    from new_module import main, tokens
     tokens.owner = owner
     tokens.token = token
     tokens.bot_tarif = bot_tarif
-    import main
-    import 
-    asyncio.create_task(main.running)
-    sys.path.remove(new_path)
+    tokens.path = new_path
     import tokens
+    asyncio.create_task(main.running)
     await state.clear()
     await message.answer('Succesfully')
 

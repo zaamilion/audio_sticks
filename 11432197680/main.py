@@ -1,6 +1,4 @@
 import sys
-'''
-Остановился здесь. Проблема в том что бот которого создает main_bot ищет файлы в директории main_bot а не в 11432197680'''
 from asyncio import run
 import asyncio
 from aiogram import Bot, Dispatcher, types, Router
@@ -18,7 +16,6 @@ dp = Dispatcher()
 rt = Router()
 dp.include_router(rt)
 bot = Bot(token=tokens.token)
-
 voice_ids = db.Database('voices')
 voice_ids.load()
 users = db.Database('users')
