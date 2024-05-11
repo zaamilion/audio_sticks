@@ -1,30 +1,27 @@
+import sys
 from asyncio import run
+import asyncio
 from aiogram import Bot, Dispatcher, types, Router
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 import random
-import sys
 import os
-sys.path.insert(0,'/workspaces/audio_sticks/data')
 import db
 import tokens
 import markups
 import functions
 import classes
 import blanks
-
 dp = Dispatcher()
 rt = Router()
 dp.include_router(rt)
-bot = Bot(token=tokens.TOKEN)
-
+bot = Bot(token=tokens.token)
 voice_ids = db.Database('voices')
 voice_ids.load()
 users = db.Database('users')
 users.load()
 requests = 0
 last_message = {}
-print('Hello')
 @rt.message(CommandStart())
 async def start(message: types.Message):
     global requests
@@ -37,22 +34,9 @@ async def start(message: types.Message):
     else:
         await message.answer(blanks.subscribe_message, reply_markup=markups.markup_subscribe)
 
-"""
-@dp.message()
-async def commands(message: types.Message):
-    global requests
-    requests += 1
-    if requests == 10:
-        dp.dump()
-        requests = 0
-    if message.from_user.id not in users.list:
-        users.list.append(message.from_user.id)
-    if (await bot.get_chat_member(user_id=message.from_user.id, chat_id=-1002013605939)).status != 'left':
-        
-        await message.answer('Бот работает в инлайн режиме')
-    else:
-        await message.answer(blanks.subscribe_message, reply_markup=markup_subscribe)"""
-
+@rt.message()
+async def starting_bot(message: types.Message):
+    await message.answer(blanks.bot_working_only_in_inline)
 @rt.callback_query()
 async def cquery(call: types.callback_query, state: FSMContext):
     global requests, last_message
@@ -69,7 +53,6 @@ async def cquery(call: types.callback_query, state: FSMContext):
             voice_ids.dump()
             res = voice_ids.load()
             res_names = '\n🔊'.join([key for key in res])
-            print(res_names)
             text = f'Список гс в боте: {len(res)}/{tokens.bot_tarif.quantity} по тарифу {tokens.bot_tarif.name} \n🔊{res_names}'
             last_message[call.from_user.id] = await bot.send_message(call.from_user.id, text)
         elif call.data == 'add_voice':
@@ -78,6 +61,8 @@ async def cquery(call: types.callback_query, state: FSMContext):
         elif call.data == 'delete_voice':
             last_message[call.from_user.id] = await bot.send_message(call.from_user.id,blanks.delete_voice_text)
             await state.set_state(classes.delete_voice.id)
+        elif call.data == 'cabinet':
+            last_message[call.from_user.id] = await message.answer(blanks.cabinet(tokens.bot_tarif))
 
     else:
         await bot.send_message(call.from_user.id, blanks.subscribe_message, reply_markup=markup_subscribe)
@@ -152,7 +137,4 @@ async def inline(query: types.InlineQuery):
         await query.answer([types.InlineQueryResultArticle(id="0", title='ПОДПИШИСЬ НА КАНАЛ', input_message_content=types.InputTextMessageContent(message_text='Чтобы пользоваться ботом подпишись на канал:\n\n@voicemessage_studio'))])
 
 async def running():
-    print('Run')
     await dp.start_polling(bot)
-    print('Run')
-run(running())

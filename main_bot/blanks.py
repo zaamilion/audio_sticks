@@ -1,0 +1,5 @@
+subscribe_message = '⚙️Подпишись на канал для пользования ботом:\n\n@voicemessage_studio'
+start_menu = 'Voice Stickers Бот - не просто стикеры\nЭто **голосовые** стикеры, \n где ты можешь **создавать** стикерпаки!'
+main_menu = 'Главное меню'
+choose_tarif_for_new_bot = 'Выберите тариф для нового стикерпака'
+create_bot = 'Для создания стикерпака необходимо создать бота. [Инструкция](https://telegra.ph/Kak-sozdat-Bota-dlya-vojs-stikerpaka-05-10)'
