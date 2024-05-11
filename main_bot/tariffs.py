@@ -9,6 +9,7 @@ class BotTarif:
     def __init__(self, name, quantity, id):
         self.name = name
         self.quantity = quantity
+        self.id = id
 bot_default = BotTarif(name='Стандартный', quantity=5, id='bot_default')
 bot_lite = BotTarif(name='Лайт', quantity=15, id='bot_lite')
 bot_premium = BotTarif(name='Премиум', quantity=25, id='bot_premium')

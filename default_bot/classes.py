@@ -6,3 +6,9 @@ class get_voice(StatesGroup):
 class delete_voice(StatesGroup):
     id = State()
     confirm = State()
+
+class BotTarif:
+    def __init__(self, name, quantity, id):
+        self.name = name
+        self.quantity = quantity
+        self.id = id

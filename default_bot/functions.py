@@ -19,3 +19,6 @@ async def delete_old_message(user, messages):
         await messages[user].delete()
     except:
         return False
+
+def dict_to_class(dict, clas):
+    return clas(**dict)

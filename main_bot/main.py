@@ -1,10 +1,13 @@
 import asyncio
 from aiogram import Bot, Dispatcher, types, Router, F
 from aiogram.filters import CommandStart
-from aiogram.fsm.context import FSMContext
-import importlib
-import shutil
 import os
+import threading
+import importlib
+import json
+from aiogram.fsm.context import FSMContext
+import subprocess
+import shutil
 import sys
 import tokens
 import markups
@@ -16,6 +19,8 @@ import blanks
 BASE_PATH = '/workspaces/audio_sticks'
 SELF_PATH = '/workspaces/audio_sticks/main_bot'
 BASE_BOT_PATH = '/workspaces/audio_sticks/default_bot'
+
+sys.path.append(BASE_PATH)
 
 last_message = {}
 bot = Bot(token=tokens.token)
@@ -36,6 +41,7 @@ async def creating_bot0(message: types.Message, state: FSMContext):
 
 @rt.callback_query(fsm.creating_bot.tarif)
 async def creating_bot1(call: types.callback_query, state: FSMContext):
+    await state.clear()
     await functions.delete_old_message(call.from_user.id, last_message)
     tarif = functions.get_tariff(call, users)
     await state.update_data(tariff=tarif)
@@ -47,26 +53,29 @@ async def creating_bot1(call: types.callback_query, state: FSMContext):
 
 @rt.message(fsm.creating_bot.token)
 async def creating_bot2(message: types.Message, state: FSMContext):
+    global tokenz
     await functions.delete_old_message(message.from_user.id, last_message)
+    last_message[message.from_user.id] = await message.answer('Waiting...')
     bot_tarif = await state.get_data()
     bot_tarif = list(bot_tarif.values())[0]
-    owner = message.from_user.id 
-    token = message.text
-    name = f'{owner}{len(users.list[owner][1])}'
+    owner_bot = message.from_user.id 
+    token_bot = message.text
+    name = f'{owner_bot}{len(users.list[owner_bot][1])}'
     new_path = BASE_PATH + f'/{name}'
-    shutil.copytree(BASE_BOT_PATH, new_path)
+    
+    dict_tokens = {}
+    dict_tokens['token'] = token_bot
+    dict_tokens['owner'] = owner_bot
+    dict_tokens['tarif'] = bot_tarif.__dict__
 
-    sys.path.append(new_path)
-    new_module = importlib.import_module(name)
-    from new_module import main, tokens
-    tokens.owner = owner
-    tokens.token = token
-    tokens.bot_tarif = bot_tarif
-    tokens.path = new_path
-    import tokens
-    asyncio.create_task(main.running)
-    await state.clear()
-    await message.answer('Succesfully')
+    shutil.copytree(BASE_BOT_PATH, new_path)
+    
+    with open(f'{new_path}/tokens.json', 'w') as file:
+        json.dump(dict_tokens, file)
+
+    await asyncio.create_subprocess_shell(f'cd {new_path}&&python3 main.py')
+    await functions.delete_old_message(message.from_user.id, last_message)
+    last_message[message.from_user.id] = await message.answer('Succesfull')
 
 async def running():
     await dp.start_polling(bot)

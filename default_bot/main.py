@@ -7,7 +7,7 @@ from aiogram.fsm.context import FSMContext
 import random
 import os
 import db
-import tokens
+import tokenz
 import markups
 import functions
 import classes
@@ -15,7 +15,7 @@ import blanks
 dp = Dispatcher()
 rt = Router()
 dp.include_router(rt)
-bot = Bot(token=tokens.token)
+bot = Bot(token=tokenz.token)
 voice_ids = db.Database('voices')
 voice_ids.load()
 users = db.Database('users')
@@ -28,8 +28,8 @@ async def start(message: types.Message):
     await functions.delete_old_message(message.from_user.id, last_message)
     requests = functions.save_db(requests, users)
     functions.add_to_db(message.from_user.id, users)
-    if await functions.check_subscribe(bot, message, tokens.channels):
-        if message.from_user.id == tokens.owner:
+    if await functions.check_subscribe(bot, message, tokenz.channels):
+        if message.from_user.id == tokenz.owner:
             await message.answer('Привет! Админ-панель войспака:', reply_markup=markups.admin_panel)
     else:
         await message.answer(blanks.subscribe_message, reply_markup=markups.markup_subscribe)
@@ -43,7 +43,7 @@ async def cquery(call: types.callback_query, state: FSMContext):
     functions.add_to_db(call.from_user.id, users)
     requests = functions.save_db(requests, users)
     await functions.delete_old_message(call.from_user.id, last_message)
-    if await functions.check_subscribe(bot, call, tokens.channels):
+    if await functions.check_subscribe(bot, call, tokenz.channels):
         if call.data == 'cancel':
             await state.clear()
             await bot.send_message(call.from_user.id, 'Админ-панель войспака:', reply_markup=markups.admin_panel)
@@ -53,7 +53,7 @@ async def cquery(call: types.callback_query, state: FSMContext):
             voice_ids.dump()
             res = voice_ids.load()
             res_names = '\n🔊'.join([key for key in res])
-            text = f'Список гс в боте: {len(res)}/{tokens.bot_tarif.quantity} по тарифу {tokens.bot_tarif.name} \n🔊{res_names}'
+            text = f'Список гс в боте: {len(res)}/{tokenz.bot_tarif.quantity} по тарифу {tokenz.bot_tarif.name} \n🔊{res_names}'
             last_message[call.from_user.id] = await bot.send_message(call.from_user.id, text)
         elif call.data == 'add_voice':
             last_message[call.from_user.id] = await bot.send_message(call.from_user.id,blanks.add_voice)
@@ -62,14 +62,14 @@ async def cquery(call: types.callback_query, state: FSMContext):
             last_message[call.from_user.id] = await bot.send_message(call.from_user.id,blanks.delete_voice_text)
             await state.set_state(classes.delete_voice.id)
         elif call.data == 'cabinet':
-            last_message[call.from_user.id] = await message.answer(blanks.cabinet(tokens.bot_tarif))
+            last_message[call.from_user.id] = await bot.send_message(call.from_user.id,blanks.cabinet(tokenz.bot_tarif))
 
     else:
-        await bot.send_message(call.from_user.id, blanks.subscribe_message, reply_markup=markup_subscribe)
+        await bot.send_message(call.from_user.id, blanks.subscribe_message, reply_markup=markups.markup_subscribe)
 @rt.message(classes.get_voice.audio)
 async def audio_review(message: types.Message, state: FSMContext):
     await functions.delete_old_message(message.from_user.id, last_message)
-    if len(voice_ids.list) == tokens.bot_tarif.quantity:
+    if len(voice_ids.list) == tokenz.bot_tarif.quantity:
         last_message[message.from_user.id] = await message.answer(blanks.no_place_for_sound)
         await message.answer('Админ-панель войспака:', reply_markup=markups.admin_panel)
     elif message.caption in voice_ids.list.keys():
@@ -126,7 +126,7 @@ async def inline(query: types.InlineQuery):
     await functions.delete_old_message(query.from_user.id, last_message)
     functions.add_to_db(query.from_user.id, users)
     requests = functions.save_db(requests, users)
-    if await functions.check_subscribe(bot, query, tokens.channels):
+    if await functions.check_subscribe(bot, query, tokenz.channels):
         res_ids = {}
         for name, id in voice_ids.list.items():
             res_ids[name] = tuple([len(set(query.query.lower().split()) & set(name.split())), id])
@@ -138,3 +138,6 @@ async def inline(query: types.InlineQuery):
 
 async def running():
     await dp.start_polling(bot)
+
+if __name__ == '__main__':
+    asyncio.run(running())
