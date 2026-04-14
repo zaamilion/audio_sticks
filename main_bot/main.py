@@ -16,9 +16,11 @@ import db
 import fsm
 import blanks
 
-BASE_PATH = '/workspaces/audio_sticks'
-SELF_PATH = '/workspaces/audio_sticks/main_bot'
-BASE_BOT_PATH = '/workspaces/audio_sticks/default_bot'
+print(os.getcwd())
+
+BASE_PATH = os.getcwd()
+SELF_PATH = ''
+BASE_BOT_PATH = './default_bot'
 
 sys.path.append(BASE_PATH)
 
