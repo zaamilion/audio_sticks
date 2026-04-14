@@ -16,12 +16,10 @@ import db
 import fsm
 import blanks
 
-print(os.getcwd())
 
-BASE_PATH = os.getcwd()
-SELF_PATH = ''
-BASE_BOT_PATH = './default_bot'
-
+BASE_PATH = tokens.base_path
+SELF_PATH = tokens.self_path
+BASE_BOT_PATH = tokens.base_bot_path
 sys.path.append(BASE_PATH)
 
 last_message = {}
